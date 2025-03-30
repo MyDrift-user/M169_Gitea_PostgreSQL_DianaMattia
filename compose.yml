@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Eigenes isoliertes Netzwerk zur Begrenzung der Kommunikation auf definierte Container
 networks:
   gitea-net:
