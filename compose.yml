@@ -1,43 +1,64 @@
 version: '3.8'
 
+# Eigenes isoliertes Netzwerk zur Begrenzung der Kommunikation auf definierte Container
 networks:
   gitea-net:
     driver: bridge
 
+# Persistente Volumes zur dauerhaften Datenspeicherung
 volumes:
   gitea-data:
   gitea-config:
   postgres-data:
 
 services:
+  # PostgreSQL-Datenbankservice mit sicherheitsrelevanten Einstellungen
   db:
+    # Verwendung des offiziellen und aktuellen PostgreSQL-Images
     image: postgres:latest
+    # Container wird automatisch neugestartet, falls er fehlschlägt oder der Host neu gestartet wird
     restart: always
+    # Zugriff auf sensible Umgebungsvariablen über eine .env-Datei, die nicht versioniert wird
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: gitea
-      POSTGRES_PASSWORD: gitea_password
-      POSTGRES_DB: gitea
+      POSTGRES_USER: ${POSTGRES_USER}        # Konfiguration über .env-Datei
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}            # Datenbankname aus .env-Datei
+    # Datenpersistenz: Datenbankdaten werden dauerhaft gespeichert
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    # Verwendung des definierten Netzwerks zur Isolation von Services
     networks:
       - gitea-net
 
+  # Gitea-Service (Versionsverwaltung) mit eingeschränkten Benutzerrechten und sicherer Konfiguration
   gitea:
+    # Verwendung des offiziellen und aktuellen Gitea-Images
     image: gitea/gitea:latest
+    # Container wird automatisch neugestartet, falls er fehlschlägt oder der Host neu gestartet wird
     restart: always
+    env_file:
+      - .env
     environment:
+      USER_UID: ${USER_UID}                  # Kein Root-Zugriff – UID aus .env
+      USER_GID: ${USER_GID}                  # Kein Root-Zugriff im Container
       DB_TYPE: postgres
       DB_HOST: db:5432
-      DB_NAME: gitea
-      DB_USER: gitea
-      DB_PASSWD: gitea_password
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWD: ${POSTGRES_PASSWORD}
+    # Nur notwendige Ports (HTTP und SSH) werden nach außen geöffnet
     ports:
       - "3000:3000"
       - "2222:22"
+    # Konfigurations- und Anwendungsdaten persistent speichern
     volumes:
       - gitea-data:/var/lib/gitea
       - gitea-config:/etc/gitea
+    # Sicherstellen, dass der Datenbankservice vor dem Gitea-Service gestartet wird
     depends_on:
       - db
+    # Verwendung des definierten Netzwerks zur Isolation von Services
     networks:
       - gitea-net
