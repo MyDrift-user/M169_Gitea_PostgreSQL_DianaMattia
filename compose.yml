@@ -31,6 +31,15 @@ services:
     # Verwendung des definierten Netzwerks zur Isolation von Services
     networks:
       - gitea-net
+    # Ressourcenbeschränkungen entsprechend der geschätzten Anforderungen
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'                         # Maximale CPU-Anzahl: 2 Kerne
+          memory: 2G                          # Maximal 2 GB RAM
+        reservations:
+          cpus: '1.0'                         # Minimum 1 CPU
+          memory: 1G                          # Minimum 1 GB RAM
 
   # Gitea-Service (Versionsverwaltung) mit eingeschränkten Benutzerrechten und sicherer Konfiguration
   gitea:
@@ -62,3 +71,12 @@ services:
     # Verwendung des definierten Netzwerks zur Isolation von Services
     networks:
       - gitea-net
+    # Ressourcenbeschränkungen entsprechend der geschätzten Anforderungen
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'                         # Maximale CPU: 1 Kern
+          memory: 512M                        # Maximal 512 MB RAM
+        reservations:
+          cpus: '0.5'                         # Minimum 0.5 CPU
+          memory: 256M                        # Minimum 256 MB RAM
